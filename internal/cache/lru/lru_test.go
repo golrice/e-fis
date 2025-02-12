@@ -1,4 +1,4 @@
-package pkg
+package lru
 
 import (
 	"reflect"
@@ -12,7 +12,7 @@ func (d String) Len() int {
 	return len(d)
 }
 
-func TestCache_Get(t *testing.T) {
+func TestLru_Get(t *testing.T) {
 	cache := New(int64(0), nil)
 
 	cache.Add("key1", String("1234"))
@@ -24,7 +24,7 @@ func TestCache_Get(t *testing.T) {
 	}
 }
 
-func TestCache_RemoveByStrategy(t *testing.T) {
+func TestLru_RemoveByStrategy(t *testing.T) {
 	k1, k2, k3 := "k1", "k2", "k3"
 	v1, v2, v3 := "v1", "v2", "v3"
 
@@ -41,7 +41,7 @@ func TestCache_RemoveByStrategy(t *testing.T) {
 	}
 }
 
-func TestCache_OnRemove(t *testing.T) {
+func TestLru_OnRemove(t *testing.T) {
 	keys := make([]string, 0)
 
 	callback := func(key string, value Value) {

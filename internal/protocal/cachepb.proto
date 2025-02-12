@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+option go_package = ".";
+
+package protocal;
+
+message Request {
+  string nodeName = 1;
+  string key = 2;
+}
+
+message Response {
+  bytes value = 1;
+}
