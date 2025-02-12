@@ -3,6 +3,8 @@ package lru
 import (
 	"reflect"
 	"testing"
+
+	"github.com/golrice/e-fis/internal/cache/basic"
 )
 
 // just for testing
@@ -44,7 +46,7 @@ func TestLru_RemoveByStrategy(t *testing.T) {
 func TestLru_OnRemove(t *testing.T) {
 	keys := make([]string, 0)
 
-	callback := func(key string, value Value) {
+	callback := func(key string, value basic.Value) {
 		keys = append(keys, key)
 	}
 

@@ -3,19 +3,31 @@ package cache
 import (
 	"sync"
 
+	"github.com/golrice/e-fis/internal/cache/basic"
+	"github.com/golrice/e-fis/internal/cache/fifo"
+	"github.com/golrice/e-fis/internal/cache/lfu"
 	"github.com/golrice/e-fis/internal/cache/lru"
 )
 
 type cache struct {
 	mu       sync.Mutex
-	lru      *lru.Cache
+	bc       basic.BasicCache
 	capacity int64
 }
 
-func NewCache(capacity int64) *cache {
+func NewCache(capacity int64, bc string) *cache {
+	var bcache basic.BasicCache
+	switch bc {
+	case "lru":
+		bcache = lru.New(capacity, nil)
+	case "fifo":
+		bcache = fifo.New(capacity, nil)
+	case "lfu":
+		bcache = lfu.New(capacity, nil)
+	}
 	return &cache{
 		mu:       sync.Mutex{},
-		lru:      lru.New(capacity, nil),
+		bc:       bcache,
 		capacity: capacity,
 	}
 }
@@ -24,22 +36,22 @@ func (c *cache) add(key string, value ByteView) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	if c.lru == nil {
-		c.lru = lru.New(c.capacity, nil)
+	if c.bc == nil {
+		c.bc = lru.New(c.capacity, nil)
 	}
 
-	c.lru.Add(key, value)
+	c.bc.Add(key, value)
 }
 
 func (c *cache) get(key string) (value ByteView, ok bool) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	if c.lru == nil {
+	if c.bc == nil {
 		return
 	}
 
-	if v, ok := c.lru.Get(key); ok {
+	if v, ok := c.bc.Get(key); ok {
 		bv := v.(ByteView)
 		return NewByteView(bv.ByteSlice()), ok
 	}

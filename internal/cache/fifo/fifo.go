@@ -1,4 +1,4 @@
-package lru
+package fifo
 
 import (
 	"container/list"
@@ -6,7 +6,7 @@ import (
 	"github.com/golrice/e-fis/internal/cache/basic"
 )
 
-type LruCache basic.Cache
+type FifoCache basic.Cache
 
 // lactual list element
 type entry struct {
@@ -14,8 +14,8 @@ type entry struct {
 	value basic.Value
 }
 
-func New(maxBytes int64, onRemove func(key string, value basic.Value)) *LruCache {
-	return &LruCache{
+func New(maxBytes int64, onRemove func(key string, value basic.Value)) *FifoCache {
+	return &FifoCache{
 		Mem: basic.MemInfo{
 			MaxBytes:  maxBytes,
 			UsedBytes: 0,
@@ -26,48 +26,43 @@ func New(maxBytes int64, onRemove func(key string, value basic.Value)) *LruCache
 	}
 }
 
-// we get the kv and change position according to the mem strategy
-func (c *LruCache) Get(key string) (value basic.Value, ok bool) {
+func (c *FifoCache) Get(key string) (value basic.Value, ok bool) {
 	if v, ok := c.Cache[key]; ok {
-		c.Bl.MoveToFront(v)
 		vv := v.Value.(*entry)
 		return vv.value, true
 	}
 	return
 }
 
-func (c *LruCache) RemoveByStrategy() {
-	item := c.Bl.Back()
-
-	// nil if empty
-	if item == nil {
+func (c *FifoCache) RemoveByStrategy() {
+	target := c.Bl.Front()
+	if target == nil {
 		return
 	}
+	tarV := target.Value.(*entry)
 
-	v := item.Value.(*entry)
-	// we need to remove the item from list and flush mem and cache
-	c.Bl.Remove(item)
-	delete(c.Cache, v.key)
-	c.Mem.UsedBytes -= int64(len(v.key)) + int64(v.value.Len())
+	// remove target
+	c.Bl.Remove(target)
+	delete(c.Cache, tarV.key)
+	c.Mem.UsedBytes -= int64(len(tarV.key)) + int64(tarV.value.Len())
 
 	if c.OnRemove != nil {
-		c.OnRemove(v.key, v.value)
+		c.OnRemove(tarV.key, tarV.value)
 	}
 }
 
-func (c *LruCache) Add(key string, value basic.Value) {
+func (c *FifoCache) Add(key string, value basic.Value) {
 	// check whether the kv is in cache
 	if e, ok := c.Cache[key]; ok {
 		// in cache, update
 		v := e.Value.(*entry)
 
-		c.Bl.MoveToFront(e)
 		v.value = value
 
 		c.Mem.UsedBytes += int64(value.Len()) - int64(v.value.Len())
 	} else {
 		// if not in cache, add it in link & update cache
-		e := c.Bl.PushFront(&entry{
+		e := c.Bl.PushBack(&entry{
 			key:   key,
 			value: value,
 		})
@@ -81,6 +76,6 @@ func (c *LruCache) Add(key string, value basic.Value) {
 	}
 }
 
-func (c *LruCache) Len() int {
+func (c *FifoCache) Len() int {
 	return c.Bl.Len()
 }

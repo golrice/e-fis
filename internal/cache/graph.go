@@ -57,7 +57,7 @@ func NewNode(name string, capacity int64, getter GetterLikeFunc) *Node {
 
 	node := &Node{
 		name:          name,
-		cache:         NewCache(capacity),
+		cache:         NewCache(capacity, "lru"),
 		getter:        getter,
 		peers:         nil,
 		flowcontroler: &flowcontrol.Controler{},

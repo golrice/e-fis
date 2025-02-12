@@ -7,9 +7,9 @@ import (
 )
 
 func TestCache_New(t *testing.T) {
-	cache1 := NewCache(0)
-	cache2 := NewCache(10)
-	cache3 := NewCache(-10)
+	cache1 := NewCache(0, "lru")
+	cache2 := NewCache(10, "lru")
+	cache3 := NewCache(-10, "lru")
 
 	if cache1 == nil || cache2 == nil || cache3 == nil {
 		t.Fatal("fail to init cache")
@@ -17,7 +17,7 @@ func TestCache_New(t *testing.T) {
 }
 
 func TestCache_Add(t *testing.T) {
-	cache := NewCache(0)
+	cache := NewCache(0, "lru")
 
 	// use for loop to store 100 numbers
 	for i := 0; i < 100; i += 1 {
@@ -26,7 +26,7 @@ func TestCache_Add(t *testing.T) {
 }
 
 func TestCache_Get(t *testing.T) {
-	cache := NewCache(0)
+	cache := NewCache(0, "lru")
 
 	var group sync.WaitGroup
 	error_info := make(chan [2]int)

@@ -12,3 +12,7 @@ message Request {
 message Response {
   bytes value = 1;
 }
+
+service RpcGetter {
+  rpc Get(Request) returns (Response) {}
+}
