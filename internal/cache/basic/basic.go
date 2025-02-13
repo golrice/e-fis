@@ -29,5 +29,7 @@ type BasicCache interface {
 	Get(key string) (value Value, ok bool)
 	RemoveByStrategy()
 	Add(key string, value Value)
+	Delete(key string)
+	Update(key string, value Value) (ok bool)
 	Len() int
 }

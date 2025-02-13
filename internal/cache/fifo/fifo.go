@@ -75,6 +75,36 @@ func (c *FifoCache) Add(key string, value basic.Value) {
 		c.RemoveByStrategy()
 	}
 }
+func (c *FifoCache) Delete(key string) {
+	e, ok := c.Cache[key]
+	if !ok {
+		return
+	}
+
+	v := e.Value.(*entry)
+
+	c.Mem.UsedBytes -= int64(len(key)) + int64(v.value.Len())
+	delete(c.Cache, key)
+	c.Bl.Remove(e)
+}
+
+func (c *FifoCache) Update(key string, value basic.Value) (ok bool) {
+	e, ok := c.Cache[key]
+	if !ok {
+		return
+	}
+
+	v := e.Value.(*entry)
+	c.Mem.UsedBytes += int64(value.Len()) - int64(v.value.Len())
+	v.value = value
+	c.Bl.MoveToFront(e)
+
+	if c.Mem.MaxBytes != 0 && c.Mem.MaxBytes < c.Mem.UsedBytes {
+		c.RemoveByStrategy()
+	}
+
+	return
+}
 
 func (c *FifoCache) Len() int {
 	return c.Bl.Len()

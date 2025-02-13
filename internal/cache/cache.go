@@ -58,3 +58,25 @@ func (c *cache) get(key string) (value ByteView, ok bool) {
 
 	return
 }
+
+func (c *cache) delete(key string) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	if c.bc == nil {
+		return
+	}
+
+	c.bc.Delete(key)
+}
+
+func (c *cache) update(key string, value ByteView) (ok bool) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	if c.bc == nil {
+		c.bc = lru.New(c.capacity, nil)
+	}
+
+	return c.bc.Update(key, value)
+}

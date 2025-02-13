@@ -81,6 +81,39 @@ func (c *LruCache) Add(key string, value basic.Value) {
 	}
 }
 
+func (c *LruCache) Delete(key string) {
+	// check whether the kv is in cache
+	e, ok := c.Cache[key]
+	if !ok {
+		return
+	}
+
+	v := e.Value.(*entry)
+
+	c.Mem.UsedBytes -= int64(len(key)) + int64(v.value.Len())
+	delete(c.Cache, key)
+	c.Bl.Remove(e)
+}
+
+func (c *LruCache) Update(key string, value basic.Value) (ok bool) {
+	// check whether the kv is in cache
+	e, ok := c.Cache[key]
+	if !ok {
+		return
+	}
+
+	v := e.Value.(*entry)
+	c.Mem.UsedBytes += int64(value.Len()) - int64(v.value.Len())
+	v.value = value
+	c.Bl.MoveToFront(e)
+
+	if c.Mem.MaxBytes != 0 && c.Mem.MaxBytes < c.Mem.UsedBytes {
+		c.RemoveByStrategy()
+	}
+
+	return
+}
+
 func (c *LruCache) Len() int {
 	return c.Bl.Len()
 }
